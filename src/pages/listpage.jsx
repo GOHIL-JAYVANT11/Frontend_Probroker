@@ -28,7 +28,7 @@ export default function PropertyTable() {
 
       const fetchData = async () => {
         try {
-          const response = await axios.get(`http://localhost:4000/data/companydata/${encodeURIComponent(companyname)}/${encodeURIComponent(categories)}`);
+          const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/data/companydata/${encodeURIComponent(companyname)}/${encodeURIComponent(categories)}`);
           console.log("Response Status:", response.status);
           console.log("Response Data:", response.data);
           if (response.status === 200) {
@@ -81,7 +81,7 @@ export default function PropertyTable() {
 
   const handleEdit = async (property) => {
     try {
-      const response = await axios.put(`http://localhost:4000/data/property/${property._id}`, {
+      const response = await axios.put(`${import.meta.env.VITE_BASE_URL}/data/property/${property._id}`, {
         data: property.data
       });
       
