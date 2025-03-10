@@ -27,7 +27,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/admin/login`,
+        `http://54.162.19.212:4000/admin/login`,
         userData
       );
 

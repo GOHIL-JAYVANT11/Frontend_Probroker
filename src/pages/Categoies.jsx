@@ -120,7 +120,7 @@ export default function SidebarWithFileUpload() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const url = `${import.meta.env.VITE_BASE_URL}/data/upload-property/${encodeURIComponent(company)}/${encodeURIComponent(category)}`;
+    const url = `http://54.162.19.212:4000/data/upload-property/${encodeURIComponent(company)}/${encodeURIComponent(category)}`;
     console.log('URL:', url);
 
     setIsLoading(true);
