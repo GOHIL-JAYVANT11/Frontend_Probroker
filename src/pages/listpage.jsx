@@ -81,7 +81,7 @@ export default function PropertyTable() {
 
   const handleEdit = async (property) => {
     try {
-      const response = await axios.put(`http://54.162.19.212:4000/data/property/${property._id}`, {
+      const response = await axios.put(`http://localhost:4000/data/property/${property._id}`, {
         data: property.data
       });
       
