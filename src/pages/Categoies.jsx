@@ -1,13 +1,12 @@
 import axios from 'axios';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { gsap } from 'gsap';
 
 const sources = [
-  "Nobroker", "OLX", "99acres", "realestateindia", "My Gate", "Housing",
-  "Square yards", "Home Online", "Magicbricks", "Manual Calling",
-  "WhatsApp", "Field", "Facebook"
+  "Nobroker", "OLX", "99acres", "realestateindia", "My Gate", 
+    "Housing", "Square yards", "Home Online", "Magicbricks", 
+    "Manual Calling", "WhatsApp", "Field", "Facebook"
 ];
 
 const newspapers = ["Divya Bhaskar", "Sandesh", "Gujarat Samachar"];
@@ -30,91 +29,6 @@ export default function SidebarWithFileUpload() {
   const [successMessage, setSuccessMessage] = useState('');
   
   const fileInputRef = useRef(null);
-  const sourcesRef = useRef([]);
-  const newspapersRef = useRef([]);
-  const categoriesRef = useRef([]);
-
-  // GSAP Animations
-  useEffect(() => {
-    // Animate Top Sources
-    gsap.fromTo(
-      sourcesRef.current, 
-      { opacity: 0, x: -50 }, 
-      { 
-        opacity: 1, 
-        x: 0, 
-        stagger: 0.1,
-        duration: 0.5,
-        ease: "power2.out"
-      }
-    );
-
-    // Animate Newspapers
-    gsap.fromTo(
-      newspapersRef.current, 
-      { opacity: 0, x: -50 }, 
-      { 
-        opacity: 1, 
-        x: 0, 
-        stagger: 0.1,
-        duration: 0.5,
-        ease: "power2.out"
-      }
-    );
-
-    // Animate Categories
-    gsap.fromTo(
-      categoriesRef.current, 
-      { opacity: 0, scale: 0.8 }, 
-      { 
-        opacity: 1, 
-        scale: 1,
-        stagger: 0.2,
-        duration: 0.5,
-        ease: "back.out(1.7)"
-      }
-    );
-  }, []);
-
-  // Hover Animations for Sources and Newspapers
-  const handleSourceHover = (ref) => {
-    gsap.to(ref, {
-      scale: 1.05,
-      backgroundColor: '#4B5563', // dark gray
-      color: 'white',
-      duration: 0.3,
-      ease: "power1.inOut"
-    });
-  };
-
-  const handleSourceLeave = (ref) => {
-    gsap.to(ref, {
-      scale: 1,
-      backgroundColor: '#FBBF24', // yellow-500
-      color: 'black',
-      duration: 0.3,
-      ease: "power1.inOut"
-    });
-  };
-
-  // Hover Animations for Categories
-  const handleCategoryHover = (ref) => {
-    gsap.to(ref, {
-      scale: 1.1,
-      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      duration: 0.3,
-      ease: "power1.inOut"
-    });
-  };
-
-  const handleCategoryLeave = (ref) => {
-    gsap.to(ref, {
-      scale: 1,
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      duration: 0.3,
-      ease: "power1.inOut"
-    });
-  };
 
   const uploadFileToBackend = async (file, company, category) => {
     const formData = new FormData();
@@ -185,7 +99,7 @@ export default function SidebarWithFileUpload() {
       
       {/* Sidebar */}
       <div
-        className={`fixed md:relative z-40 bg-white h-screen w-64 md:w-1/4 lg:w-1/5 p-4 overflow-y-auto transition-transform duration-300 text-black ${
+        className={`fixed md:relative z-40 bg-gray-700 h-screen w-64 md:w-1/4 lg:w-1/5 p-4 overflow-y-auto transition-transform duration-300 text-black ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}>
         {/* Top Sources Header */}
@@ -195,19 +109,16 @@ export default function SidebarWithFileUpload() {
 
         {/* Top Sources List */}
         <ul>
-          {sources.map((source, index) => (
+          {sources.map((source) => (
             <li 
               key={source} 
               className="mb-2"
-              ref={(el) => sourcesRef.current[index] = el}
             >
               <Link to={`/Categories?companyname=${encodeURIComponent(source)}`}>
                 <button
-                  onMouseEnter={() => handleSourceHover(sourcesRef.current[index])}
-                  onMouseLeave={() => handleSourceLeave(sourcesRef.current[index])}
                   onClick={() => setSelected(source)}
                   className={`w-full text-black text-left px-4 py-3 rounded-md transition-all ${
-                    selected === source ? "bg-gray-700 text-white" : "bg-yellow-500"
+                    selected === source ? "bg-gray-900 text-white" : " bg-gray-50"
                   }`}
                 >
                   {source}
@@ -224,18 +135,15 @@ export default function SidebarWithFileUpload() {
 
         {/* Newspaper List */}
         <ul>
-          {newspapers.map((paper, index) => (
+          {newspapers.map((paper) => (
             <li 
               key={paper} 
               className="mb-2"
-              ref={(el) => newspapersRef.current[index] = el}
             >
               <button
-                onMouseEnter={() => handleSourceHover(newspapersRef.current[index])}
-                onMouseLeave={() => handleSourceLeave(newspapersRef.current[index])}
                 onClick={() => setSelected(paper)}
                 className={`w-full text-black text-left px-4 py-3 rounded-md transition-all ${
-                  selected === paper ? "bg-gray-700 text-white" : "bg-yellow-500"
+                  selected === paper ? "bg-gray-900 text-white" : " bg-gray-50"
                 }`}
               >
                 {paper}
@@ -248,9 +156,9 @@ export default function SidebarWithFileUpload() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-10">
       <Link to={`/sorcenewspaper`}>  
-      <button class="fixed top-10 left-96   bg-white px-4 py-2 flex items-center gap-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200">
-        <img src="https://cdn-icons-png.flaticon.com/512/189/189254.png" alt="Icon" class="w-6 h-6"/>
-        <span class="text-sm font-medium text-gray-700">Click Me</span>
+      <button className="fixed top-10 left-96 bg-white px-4 py-2 flex items-center gap-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200">
+        <img src="https://cdn-icons-png.flaticon.com/512/189/189254.png" alt="Icon" className="w-6 h-6"/>
+        <span className="text-sm font-medium text-gray-700">Click Me</span>
     </button>
     </Link> 
         {/* Selected Source Title */}
@@ -260,15 +168,12 @@ export default function SidebarWithFileUpload() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {categories.default.map((item, index) => (
+          {categories.default.map((item) => (
             <Link 
               key={item.type} 
               to={`/Categories?companyname=${encodeURIComponent(selected)}&category=${encodeURIComponent(item.type)}`}
-              ref={(el) => categoriesRef.current[index] = el}
             >
               <div
-                onMouseEnter={() => handleCategoryHover(categoriesRef.current[index])}
-                onMouseLeave={() => handleCategoryLeave(categoriesRef.current[index])}
                 className="bg-white p-6 h-32 w-64 sm:w-72 md:w-80 rounded-2xl shadow-lg flex items-center space-x-4 transition-all text-black cursor-pointer"
                 onClick={() => handleCategoryClick(item.type)}
               >
