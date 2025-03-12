@@ -36,9 +36,18 @@ const SourceNewspaper = () => {
   return (
     <div className="bg-purple-100">
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="bg-white  shadow-sm fixed top-0 left-0 right-0 z-50">
+      <div class="max-w-[1920px] mx-auto px-4 py-2 sm:px-6 lg:px-8">
+       
+          <div class="flex items-center items-center justify-center space-x-6">
+            
+              <img className=" h-10 w-10" src="https://cdn-icons-png.flaticon.com/512/9111/9111412.png" alt="" />
+             <h1 class="text-xl flex  font-bold text-gray-900">GFY AI</h1>
+                      </div><div class="flex items-center space-x-3"></div></div></header>
+      
 
       {/* Top Sources Section */}
-      <div>
+      <div className=" pt-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 flex flex-col items-center">
           Top Sources
           <div className="w-16 h-1 bg-blue-500 mt-2"></div>
