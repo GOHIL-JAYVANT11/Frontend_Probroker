@@ -110,12 +110,28 @@ export default function PropertyTable() {
     }
   }, [selectedDate, numberFilter, premiseNameFilter, bhkFilter, areaFilter, statusFilter, propertyData]);
 
-  const handleFieldChange = (id, key, value) => {
+  const handleFieldChange = async (id, key, value) => {
+    // Update local state immediately
     setPropertyData((prevProperties) =>
       prevProperties.map((property) =>
         property._id === id ? { ...property, data: { ...property.data, [key]: value } } : property
       )
     );
+
+    // Auto-save to backend
+    try {
+      const property = propertyData.find(p => p._id === id);
+      const response = await axios.put(`http://54.162.19.212:4000/data/property/${id}`, {
+        data: { ...property.data, [key]: value }
+      });
+      
+      if (response.status === 200) {
+        console.log('Auto-saved successfully');
+      }
+    } catch (error) {
+      console.error('Error auto-saving:', error);
+      // Optionally show a small notification to user if save failed
+    }
   };
 
   const isFieldMissing = (field) => {
@@ -434,9 +450,8 @@ export default function PropertyTable() {
                 <th className="p-2 border">Owner Name</th>
                 <th className="p-2 border">Number</th>
                 <th className="p-2 border">Furniture</th>
-                <th className="p-2 border  bg-purple-300 sticky right-20">Call Status</th>
+                <th className="p-2 border  bg-purple-300 sticky right-0">Call Status</th>
                 <th className="p-2 border">remark</th>
-                <th className="p-2 border  bg-purple-300 sticky right-0">Actions</th>
               </tr>
             </thead>
             <tbody className="h-full ">
@@ -587,7 +602,7 @@ export default function PropertyTable() {
                     </select>
                   </td>
 
-                  <td className="border sticky right-20 p-0">
+                  <td className="border sticky right-0 p-0">
                     <select 
                       className="font-normal   min-h-[40px] w-auto pl-2 pr-2"
                       value={property.data.status || '-'}
@@ -611,14 +626,6 @@ export default function PropertyTable() {
                         e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
                       }}
                     />
-                  </td>
-
-                  <td className="p-2 border sticky right-0 bg-white">
-                    <button
-                      onClick={() => handleEdit(property)}
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">
-                      Save Changes
-                    </button>
                   </td>
                 </tr>
               ))}
