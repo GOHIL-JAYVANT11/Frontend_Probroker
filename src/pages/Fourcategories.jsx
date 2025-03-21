@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const categories = {
   total: [
-    { type: "All Categories ", icon: "🏣" }
+    { type: "All Categories", icon: "🏣" }
   ],
   default: [
     { type: "Residential Rent", icon: "🏡" },
@@ -45,7 +45,7 @@ export default function SidebarWithCategories() {
 
             <Link
               key={index}
-              to={`/listpage?campanyname=${encodeURIComponent(selected)}&subCom=${encodeURIComponent(item.type)}`}
+              to={`/listpage?campanyname=${encodeURIComponent(selected)}`}
             >
               <div
                 className="bg-white p-8 h-36 w-80 rounded-2xl shadow-xl flex items-center space-x-6 transform transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-2 hover:shadow-2xl"

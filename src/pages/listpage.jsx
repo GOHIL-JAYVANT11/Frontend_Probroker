@@ -42,12 +42,13 @@ export default function PropertyTable() {
         setIsLoading(true);
         try {
           let response;
-          if (categories === "All Categories") {
-            // Fetch all properties for the company
-            response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}`);
-          } else {
-            // Fetch properties for specific category
+          if (companyname && categories) {
             response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}/${encodeURIComponent(categories)}`);
+            // Fetch all properties for the company
+          } else {
+            response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}`);
+            // console.log(response)
+            // Fetch properties for specific category
           }
           
           console.log("Response Status:", response.status);
