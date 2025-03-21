@@ -31,22 +31,25 @@ export default function PropertyTable() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    // console.log("URLSearchParams:", params.toString());
     const companyname = params.get("campanyname");
     const categories = params.get("subCom");
-    // console.log("URL:", window.location.href);
-    // console.log("Company Name:", companyname);
-    // console.log("Categories:", categories);
 
-    if (companyname && categories) {
+    if (companyname) {
       setCompanyname(companyname);
       setCategories(categories);
 
-
       const fetchData = async () => {
-        setIsLoading(true); // Show loading when fetch starts
+        setIsLoading(true);
         try {
-          const response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}/${encodeURIComponent(categories)}`);
+          let response;
+          if (categories === "All Categories") {
+            // Fetch all properties for the company
+            response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}`);
+          } else {
+            // Fetch properties for specific category
+            response = await axios.get(`http://54.162.19.212:4000/data/companydata/${encodeURIComponent(companyname)}/${encodeURIComponent(categories)}`);
+          }
+          
           console.log("Response Status:", response.status);
           console.log("Response Data:", response.data);
           if (response.status === 200) {
@@ -56,7 +59,7 @@ export default function PropertyTable() {
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
-          setIsLoading(false); // Hide loading when fetch completes
+          setIsLoading(false);
         }
       };
 
@@ -302,29 +305,29 @@ export default function PropertyTable() {
 
     setIsLoading(true);
     try {
-      // Make backend API call to delete selected items
-      const response = await axios.post('http://54.162.19.212:4000/data/property/:id', {
-        ids: selectedItems
-      });
+      // Delete each selected item individually
+      const deletePromises = selectedItems.map(id => 
+        axios.delete(`http://54.162.19.212:4000/data/property/${id}`)
+      );
       
-      if (response.status === 200) {
-        // Update frontend data
-        const updatedData = propertyData.filter(item => !selectedItems.includes(item._id));
-        setPropertyData(updatedData);
-        setFilteredData(filteredData.filter(item => !selectedItems.includes(item._id)));
-        
-        // Show success popup
-        setDeleteStatus({
-          success: true,
-          message: `Successfully deleted ${selectedItems.length} items`
-        });
-      }
+      await Promise.all(deletePromises);
+      
+      // Update frontend data
+      const updatedData = propertyData.filter(item => !selectedItems.includes(item._id));
+      setPropertyData(updatedData);
+      setFilteredData(filteredData.filter(item => !selectedItems.includes(item._id)));
+      
+      // Show success popup
+      setDeleteStatus({
+        success: true,
+        message: `Successfully deleted ${selectedItems.length} items`
+      });
     } catch (error) {
       console.error("Error deleting items:", error);
-      // Show error popup
+      // Show error popup with more specific error message
       setDeleteStatus({
         success: false,
-        message: "Failed to delete items. Please try again."
+        message: error.response?.data?.message || "Failed to delete items. Please try again."
       });
     } finally {
       setIsLoading(false);
