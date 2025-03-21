@@ -27,6 +27,8 @@ export default function PropertyTable() {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState({ success: false, message: "" });
 
+  const [selectAll, setSelectAll] = useState(false); // New state for Select All
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     // console.log("URLSearchParams:", params.toString());
@@ -206,7 +208,7 @@ export default function PropertyTable() {
       Furniture: item.data.furniture || '',
       Status: item.data.status || '',
       Remark: item.data.remark || '',
-      Extralist: item.data.Extralist ||''
+      extea: item.data.extea ||''
     }));
 
     // Convert to CSV format
@@ -251,7 +253,7 @@ export default function PropertyTable() {
       Furniture: item.data.furniture || '',
       Status: item.data.status || '',
       Remark: item.data.remark || '',
-      Extralist: item.data.Extralist ||''
+      extea: item.data.extea ||''
 
     }));
 
@@ -351,6 +353,15 @@ export default function PropertyTable() {
       default:
         return "white"; // Default color
     }
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems([]); // Deselect all
+    } else {
+      setSelectedItems(propertyData.map(property => property._id)); // Select all
+    }
+    setSelectAll(!selectAll); // Toggle select all state
   };
 
   return (
@@ -455,7 +466,7 @@ export default function PropertyTable() {
           {deleteMode && selectedItems.length > 0 && (
             <button
               onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded absolute top-3 left-1/2 transform -translate-x-1/2"
+              className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded absolute top-[-40px] left-1/2  transform -translate-x-1/2"
             >
               Confirm Delete ({selectedItems.length} items)
             </button>
@@ -557,7 +568,13 @@ export default function PropertyTable() {
               {deleteMode && (
                 <th className="p-2 border">
                   <div className="flex justify-center">
-                    <span>Select</span>
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-5 h-5 cursor-pointer"
+                    />
+                    <span>Select All</span>
                   </div>
                 </th>
               )}
@@ -759,10 +776,10 @@ export default function PropertyTable() {
                       }}
                     />
                   </td>
-                  <td className={`border p-0 ${isFieldMissing(property.data.extralist) ? '' : ''}`}>
+                  <td className={`border p-0 ${isFieldMissing(property.data.extea) ? '' : ''}`}>  
                     <textarea
-                      value={property.data.extralist || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'extralist', e.target.value)}
+                      value={property.data.extea || ''}
+                      onChange={(e) => handleFieldChange(property._id, 'extea', e.target.value)}
                       className="w-auto pl-2 pr-2 min-h-[40px] bg-transparent border-none outline-none text-start font-normal resize-none"
                       rows="2"
                       onInput={(e) => {
