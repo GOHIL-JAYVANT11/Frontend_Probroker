@@ -341,13 +341,13 @@ export default function PropertyTable() {
       case "Conform":
         return "#d4edda"; // Light green
       case "NA":
-        return "#f8d7da"; // Light red
+        return "#fff3cd"; // Light red
       case "Rent Out":
-        return "#fff3cd"; // Light yellow
+        return "#f8d7da"; // Light yellow
       case "Already Listed":
         return "#cce5ff"; // Light blue
       case "Broker":
-        return "#e2e3e5"; // Light gray
+        return "#f87171"; // Light gray
       default:
         return "white"; // Default color
     }
