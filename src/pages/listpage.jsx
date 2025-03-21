@@ -9,7 +9,6 @@ export default function PropertyTable() {
   const [filteredData, setFilteredData] = useState([]);
   const [companyname, setCompanyname] = useState("");
   const [categories, setCategories] = useState("");
-  const [editMode, setEditMode] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   
   // Add new filter states
@@ -21,6 +20,12 @@ export default function PropertyTable() {
   const [showFilters, setShowFilters] = useState(false);
   // Add new loading state
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Delete functionality states
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState({ success: false, message: "" });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -138,11 +143,7 @@ export default function PropertyTable() {
     return !field || field.trim() === "";
   };
 
-  const subTypeOptions = ["Apartment", "Bungalow","Office" ,"Showroom" ,"Penthouse" ,"Tenement","Shop" ,"Godown","Space","Shed","Weekend Home" ,"Rowhouse" ,"Residential Plot" ,"PG","Pre Leased Spaces","Basement","Commercial Plot","Co Working Space","Factory","Commercial Building","Industrial Land","Commercial Flat","Ware House","-"];
-  const furnitureOptions = ["Furnished", "Unfurnished" ,"Semi-Furnished","Kitchen - Fix","-" ];
   const statusOptions = ["Conform", "NA","Rent Out","Already Listed","Broker"];
-
-  const typeOptions = ["Rent", "Sell", "Rent/Sell",'-']; // Example options
 
   const handleEdit = async (property) => {
     try {
@@ -204,7 +205,8 @@ export default function PropertyTable() {
       Number: item.data.number || '',
       Furniture: item.data.furniture || '',
       Status: item.data.status || '',
-      Remark: item.data.remark || ''
+      Remark: item.data.remark || '',
+      Extralist: item.data.Extralist ||''
     }));
 
     // Convert to CSV format
@@ -248,7 +250,9 @@ export default function PropertyTable() {
       Number: item.data.number || '',
       Furniture: item.data.furniture || '',
       Status: item.data.status || '',
-      Remark: item.data.remark || ''
+      Remark: item.data.remark || '',
+      Extralist: item.data.Extralist ||''
+
     }));
 
     const ws = XLSX.utils.json_to_sheet(xlsxData);
@@ -272,72 +276,192 @@ export default function PropertyTable() {
     setShowFilters(!showFilters);
   };
 
+  // Delete functionality methods
+  const toggleDeleteMode = () => {
+    setDeleteMode(!deleteMode);
+    if (deleteMode) {
+      setSelectedItems([]); // Clear selected items when exiting delete mode
+    }
+  };
+
+  const handleItemSelection = (id) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(selectedItems.filter(item => item !== id));
+    } else {
+      setSelectedItems([...selectedItems, id]);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (selectedItems.length === 0) {
+      alert("Please select items to delete");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Make backend API call to delete selected items
+      const response = await axios.post('http://54.162.19.212:4000/data/property/:id', {
+        ids: selectedItems
+      });
+      
+      if (response.status === 200) {
+        // Update frontend data
+        const updatedData = propertyData.filter(item => !selectedItems.includes(item._id));
+        setPropertyData(updatedData);
+        setFilteredData(filteredData.filter(item => !selectedItems.includes(item._id)));
+        
+        // Show success popup
+        setDeleteStatus({
+          success: true,
+          message: `Successfully deleted ${selectedItems.length} items`
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting items:", error);
+      // Show error popup
+      setDeleteStatus({
+        success: false,
+        message: "Failed to delete items. Please try again."
+      });
+    } finally {
+      setIsLoading(false);
+      setShowDeletePopup(true);
+      setSelectedItems([]);
+      setDeleteMode(false);
+    }
+  };
+
+  const closeDeletePopup = () => {
+    setShowDeletePopup(false);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Conform":
+        return "#d4edda"; // Light green
+      case "NA":
+        return "#f8d7da"; // Light red
+      case "Rent Out":
+        return "#fff3cd"; // Light yellow
+      case "Already Listed":
+        return "#cce5ff"; // Light blue
+      case "Broker":
+        return "#e2e3e5"; // Light gray
+      default:
+        return "white"; // Default color
+    }
+  };
+
   return (
     <div className="p-2 bg-purple-50 min-h-screen">
-      {/* Add loading popup */}
-      
-      
-      {/* Fixed Header */}
-      
-        {/* Main Header */}
-        <div className="bg-purple-50 h-15  px-2 rounded ">
-          <header className="flex justify-between items-center">
-            <div className="flex items-center">
-              <img className="h-10 max-w-40" src="https://cdn-icons-png.flaticon.com/512/9111/9111412.png" alt="" />
-              <span className="ml-2 text-xl font-bold">GFY AI</span>
-            </div>
-            
-            <div className="flex items-center h-10 gap-4">
-            <Link to={`/sorcenewspaper`}>
-                  <nav className="flex justify-between items-center p-4">
-                    <button className="text-gray-700 text-2xl ml-auto">Home</button>
-                  </nav>
-                </Link>
-              <div className="flex items-center  space-x-4">
-                <button
-                  onClick={downloadCSV}
-                  className="bg-green-500   hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Download CSV
-                </button>
-                <button
-                  onClick={downloadXLSX}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Download XLSX
-                </button>
-              </div>
-              <nav className="flex gap-3">
-               
-                <Link to={`/`}>
-                  <nav className="flex justify-between items-center p-4">
-                    <button className="  px-3 py-1 rounded-lg text-xl transition-transform duration-300 hover:scale-110">
-                      Logout
-                    </button>
-                  </nav>
-                </Link>
-              </nav>
-            </div>
-          </header>
-        </div>
-
-        {/* Company Info Section */}
-        <div className= "sticky top-0 z-50 bg-purple-50 border-b border-gray-200 px-2 py-3">
-        {isLoading && (
+      {/* Loading popup */}
+      {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-            <p className="text-lg font-semibold">Loading Properties...</p>
+            <p className="text-lg font-semibold">
+              {selectedItems.length > 0 ? 'Deleting Properties...' : 'Loading Properties...'}
+            </p>
           </div>
         </div>
       )}
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col items-start">
-              <h1 className="text-black font-bold text-lg">{companyname} - {categories}</h1>
-              <p className="text-gray-600 text-lg">Showing {filteredData.length} properties</p>
+      
+      {/* Delete confirmation popup */}
+      {showDeletePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <div className={`h-12 w-12 mb-4 flex items-center justify-center rounded-full ${deleteStatus.success ? 'bg-green-100' : 'bg-red-100'}`}>
+              {deleteStatus.success ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
             </div>
-            {showFilters && (
+            <p className="text-lg font-semibold">{deleteStatus.message}</p>
+            <button 
+              onClick={closeDeletePopup}
+              className="mt-4 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Fixed Header */}
+      <div className="bg-purple-50 h-15 px-2 rounded">
+        <header className="flex justify-between items-center">
+          <div className="flex items-center">
+            <img className="h-10 max-w-40" src="https://cdn-icons-png.flaticon.com/512/9111/9111412.png" alt="" />
+            <span className="ml-2 text-xl font-bold">GFY AI</span>
+          </div>
           
+          <div className="flex items-center h-10 gap-4">
+            <button
+              onClick={toggleDeleteMode}
+              className={`${deleteMode ? 'bg-red-500 hover:bg-red-700' : 'bg-red-400 hover:bg-red-600'} text-white font-bold py-2 px-4 rounded`}
+            >
+              {deleteMode ? 'Cancel Delete' : 'Delete'}
+            </button>
+            
+            <Link to={`/sorcenewspaper`}>
+              <nav className="flex justify-between items-center p-4">
+                <button className="text-gray-700 text-2xl ml-auto">Home</button>
+              </nav>
+            </Link>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={downloadCSV}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Download CSV
+              </button>
+              <button
+                onClick={downloadXLSX}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Download XLSX
+              </button>
+            </div>
+            
+            <nav className="flex gap-3">
+              <Link to={`/`}>
+                <nav className="flex justify-between items-center p-4">
+                  <button className="px-3 py-1 rounded-lg text-xl transition-transform duration-300 hover:scale-110">
+                    Logout
+                  </button>
+                </nav>
+              </Link>
+            </nav>
+          </div>
+        </header>
+      </div>
+
+      {/* Company Info Section with Delete Confirmation Button */}
+      <div className="sticky top-0 z-50 bg-purple-50 border-b border-gray-200 px-2 py-3">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col items-start">
+            <h1 className="text-black font-bold text-lg">{companyname} - {categories}</h1>
+            <p className="text-gray-600 text-lg">Showing {filteredData.length} properties</p>
+          </div>
+          
+          {/* Delete confirmation button when items are selected */}
+          {deleteMode && selectedItems.length > 0 && (
+            <button
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded absolute top-3 left-1/2 transform -translate-x-1/2"
+            >
+              Confirm Delete ({selectedItems.length} items)
+            </button>
+          )}
+          
+          {showFilters && (
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               <div className="flex flex-col">
                 <label className="text-xs font-semibold mb-1">Date</label>
@@ -406,211 +530,219 @@ export default function PropertyTable() {
                 </select>
               </div>
             </div>
+          )}
           
-        )}
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={toggleFilters} 
+              className="text-black font-medium bg-purple-300 px-3 py-1 rounded-lg text-sm transition-transform duration-300 hover:scale-105">
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </button>
+            {showFilters && (
               <button 
-                onClick={toggleFilters} 
-                className=" text-black font-medium bg-purple-300 px-3 py-1 rounded-lg text-sm transition-transform duration-300 hover:scale-105"
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                onClick={clearAllFilters} 
+                className="font-medium text-black px-3 bg-gray-300 py-1 rounded-lg text-sm transition-transform duration-300 hover:scale-105">
+                Clear Filters
               </button>
-              {showFilters && (
-                <button 
-                  onClick={clearAllFilters} 
-                  className=" font-medium text-black px-3  bg-gray-300 py-1 rounded-lg text-sm transition-transform duration-300 hover:scale-105"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
-        
-        {/* Filter Section - Only show when filters are toggled */}
-        
+      </div>
       
-
-      {/* Main Content with adjusted top margin */}
-       {/* Increased margin-top to accommodate header and filters */}
-        <div className="overflow-x-auto h-[calc(100vh-100px)] relative">
-          <table className="min-w-full w-screen bg-white border-gray-200">
-            <thead className="sticky  top-0 bg-purple-300 z-10">
-              <tr className="text-black  text-sm">
-                <th className="p-2 border ">Date</th>
-                <th className="p-2 border">Property Type</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">BHK</th>
-                <th className="p-2 border">Sqft</th>
-                <th className="p-2 border">Premise Name</th>
-                <th className="p-2 border">Address</th>
-                <th className="p-2 border">area</th>
-                <th className="p-2 border">Description</th>
-                <th className="p-2 border">Sub Type</th>
-                <th className="p-2 border">Owner Name</th>
-                <th className="p-2 border">Number</th>
-                <th className="p-2 border">Furniture</th>
-                <th className="p-2 border  bg-purple-300 sticky right-0">Call Status</th>
-                <th className="p-2 border">remark</th>
-              </tr>
-            </thead>
-            <tbody className="h-full ">
-              {filteredData.map((property) => (
-                <tr key={property._id} className="text-center border text-[14px]">
-                    <td className={` border ${isFieldMissing(property.data.date) ? '' : ''}`}>
+      {/* Main Content */}
+      <div className="overflow-x-auto h-[calc(100vh-100px)] relative">
+        <table className="min-w-full w-screen bg-white border-gray-200">
+          <thead className="sticky top-0 bg-purple-300 z-10">
+            <tr className="text-black text-sm">
+              {deleteMode && (
+                <th className="p-2 border">
+                  <div className="flex justify-center">
+                    <span>Select</span>
+                  </div>
+                </th>
+              )}
+              <th className="p-2 border">Source Date</th>
+              <th className="p-2 border">Property Type</th>
+              <th className="p-2 border">Price</th>
+              <th className="p-2 border">BHK</th>
+              <th className="p-2 border">Sqft</th>
+              <th className="p-2 border">Premise Name</th>
+              <th className="p-2 border">Address</th>
+              <th className="p-2 border">area</th>
+              <th className="p-2 border">Description</th>
+              <th className="p-2 border">Sub Type</th>
+              <th className="p-2 border">Owner Name</th>
+              <th className="p-2 border">Number</th>
+              <th className="p-2 border">Furniture</th>
+              <th className="p-2 border bg-purple-300 sticky right-0">Call Status</th>
+              <th className="p-2 border">remark</th>
+              <th className="p-2 border">Extralist</th>
+            </tr>
+          </thead>
+          <tbody className="h-full">
+            {filteredData.map((property) => (
+              <tr key={property._id} className="text-center border text-[14px]">
+                {deleteMode && (
+                  <td className="border text-center">
                     <input
-                      type="text"
-                      value={property.data.date || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'date', e.target.value)}
-                      className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                      type="checkbox"
+                      checked={selectedItems.includes(property._id)}
+                      onChange={() => handleItemSelection(property._id)}
+                      className="w-5 h-5 cursor-pointer"
                     />
                   </td>
+                )}
+                
+                <td className={`border ${isFieldMissing(property.data.date) ? '' : ''}`}>
+                  <input
+                    type="text"
+                    value={property.data.date || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'date', e.target.value)}
+                    className="w-24 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                  />
+                </td>
 
-                  <td className="border font-normal p-0">
-                    <select 
-                      className=" min-h-[40px] w-28"
-                      value={property.data.type || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'type', e.target.value)}
-                    >
-                      <option className=" " value="">Select Type</option>
-                      {typeOptions.map((option) => (
-                        <option className="" key={option} value={option}>{option}</option>
-                      ))}
-                    </select> 
-                  </td>
+                <td className="border font-normal p-0">
+                  <input 
+                    className="w-21 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                    value={property.data.type || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'type', e.target.value)}
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.price) ? '' : ''}`}>
-                    <input
-                      type="text"
-                      value={property.data.price || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'price', e.target.value)}
-                      className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.price) ? '' : ''}`}>
+                  <input
+                    type="text"
+                    value={property.data.price || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'price', e.target.value)}
+                    className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.bhk) ? '' : ''}`}>
-                    <input
-                      type="text"
-                      value={property.data.bhk || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'bhk', e.target.value)}
-                      className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.bhk) ? '' : ''}`}>
+                  <input
+                    type="text"
+                    value={property.data.bhk || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'bhk', e.target.value)}
+                    className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.squr) ? '' : ''}`}>
-                    <input
-                      type="text"
-                      value={property.data.squr || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'squr', e.target.value)}
-                      className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.squr) ? '' : ''}`}>
+                  <input
+                    type="text"
+                    value={property.data.squr || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'squr', e.target.value)}
+                    className="w-20 min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.project_name) ? '' : ''}`}>
-                    <textarea
-                      value={property.data.project_name || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'project_name', e.target.value)}
-                      className="w- min-h-[40px] text-start bg-transparent border-none outline-none resize-none pr-2 pl-2 font-normal"
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.project_name) ? '' : ''}`}>
+                  <textarea
+                    value={property.data.project_name || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'project_name', e.target.value)}
+                    className="w- min-h-[40px] text-start bg-transparent border-none outline-none resize-none pr-2 pl-2 font-normal"
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.address) ? '' : ''}`}>
-                    <textarea
-                      value={property.data.address || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'address', e.target.value)}
-                      className="w-72 min-h-[40px] pl-2 pr-2 bg-transparent border-none outline-none text-start font-normal resize-none"
-                      rows="2"
-                      style={{ whiteSpace: 'pre-line' }}
-                      onInput={(e) => {
-                        e.target.style.height = "40px"; // Reset height
-                        e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
-                      }}
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.address) ? '' : ''}`}>
+                  <textarea
+                    value={property.data.address || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'address', e.target.value)}
+                    className="w-72 min-h-[40px] pl-2 pr-2 bg-transparent border-none outline-none text-start font-normal resize-none"
+                    rows="2"
+                    style={{ whiteSpace: 'pre-line' }}
+                    onInput={(e) => {
+                      e.target.style.height = "40px"; // Reset height
+                      e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
+                    }}
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.area) ? '' : ''}`}>
-                    <textarea
-                      value={property.data.area || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'area', e.target.value)}
-                      className="w-40 min-h-[40px] bg-transparent border-none outline-none pl-2 pr-2 text-start font-normal resize-none"
-                      rows="2"
-                      onInput={(e) => {
-                        e.target.style.height = "40px"; // Reset height
-                        e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
-                      }}
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.area) ? '' : ''}`}>
+                  <textarea
+                    value={property.data.area || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'area', e.target.value)}
+                    className="w-40 min-h-[40px] bg-transparent border-none outline-none pl-2 pr-2 text-start font-normal resize-none"
+                    rows="2"
+                    onInput={(e) => {
+                      e.target.style.height = "40px"; // Reset height
+                      e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
+                    }}
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.description) ? '' : ''}`}>
-                    <textarea
-                      value={property.data.description || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'description', e.target.value)}
-                      className="w-72 min-h-[40px] bg-transparent border-none pl-2 pr-2 outline-none text-start font-normal resize-none"
-                      rows="2"
-                      onInput={(e) => {
-                        e.target.style.height = "40px"; // Reset height
-                        e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
-                      }}
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.description) ? '' : ''}`}>
+                  <textarea
+                    value={property.data.description || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'description', e.target.value)}
+                    className="w-72 min-h-[40px] bg-transparent border-none pl-2 pr-2 outline-none text-start font-normal resize-none"
+                    rows="2"
+                    onInput={(e) => {
+                      e.target.style.height = "40px"; // Reset height
+                      e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
+                    }}
+                  />
+                </td>
 
-                  <td className="border p-0">
-                    <select 
-                      className="font-normal min-h-[40px] pl-1   pr-2 w-36"
-                      value={property.data.sub_type || '-'}
-                      onChange={(e) => handleFieldChange(property._id, 'sub_type', e.target.value)}
-                    >
-                      <option className=" font-normal text-white" value="">Select Sub Type</option>
-                      {subTypeOptions.map((option) => (
-                        <option className=" font-normal" key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </td>
+                <td className="border p-0">
+                  <input 
+                    className="w-48 pl-2 min-h-[40px] text-start bg-transparent border-none outline-none font-normal resize-none"
+                    value={property.data.sub_type || '-'}
+                    onChange={(e) => handleFieldChange(property._id, 'sub_type', e.target.value)}
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.owner_name) ? '' : ''}`}>
-                    <textarea
-                      value={property.data.owner_name || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'owner_name', e.target.value)}
-                      className="w-auto pl-2 pr-2 min-h-[40px] bg-transparent border-none outline-none text-start font-normal resize-none"
-                      rows="2"
-                      onInput={(e) => {
-                        e.target.style.height = "40px"; // Reset height
-                        e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
-                      }}
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.owner_name) ? '' : ''}`}>
+                  <textarea
+                    value={property.data.owner_name || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'owner_name', e.target.value)}
+                    className="w-auto pl-2 pr-2 min-h-[40px] bg-transparent border-none outline-none text-start font-normal resize-none"
+                    rows="2"
+                    onInput={(e) => {
+                      e.target.style.height = "40px"; // Reset height
+                      e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
+                    }}
+                  />
+                </td>
 
-                  <td className={`border p-0 ${isFieldMissing(property.data.number) ? '' : ''}`}>
-                    <input
-                      type="text"
-                      value={property.data.number || ''}
-                      onChange={(e) => handleFieldChange(property._id, 'number', e.target.value)}
-                      className="w-auto min-h-[40px] text-center bg-transparent border-none outline-none font-normal"
-                    />
-                  </td>
+                <td className={`border p-0 ${isFieldMissing(property.data.number) ? '' : ''}`}>
+                  <input
+                    type="text"
+                    value={property.data.number || ''}
+                    onChange={(e) => handleFieldChange(property._id, 'number', e.target.value)}
+                    className="w-48 pl-2 min-h-[40px] text-start bg-transparent border-none outline-none font-normal resize-none"
+                  />
+                </td>
 
-                  <td className="border p-0">
-                    <select 
-                      className="font-normal min-h-[40px] w-auto pl-2 pr-2"
-                      value={property.data.furniture || '-'}
-                      onChange={(e) => handleFieldChange(property._id, 'furniture', e.target.value)}
-                    >
-                      <option className="font-normal" value="">Select Furniture</option>
-                      {furnitureOptions.map((option) => (
-                        <option className=" font-norma" key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </td>
+                <td className="border p-0">
+                  <input 
+                    className="font-normal min-h-[40px] w-auto pl-2 pr-2"
+                    value={property.data.furniture || '-'}
+                    onChange={(e) => handleFieldChange(property._id, 'furniture', e.target.value)}
+                  />
+                </td>
 
                   <td className="border sticky right-0 p-0">
                     <select 
-                      className="font-normal   min-h-[40px] w-auto pl-2 pr-2"
+                      className="font-normal min-h-[40px] w-auto pl-2 pr-2"
                       value={property.data.status || '-'}
-                      onChange={(e) => handleFieldChange(property._id, 'status', e.target.value)}
+                      onChange={(e) => {
+                        handleFieldChange(property._id, 'status', e.target.value);
+                        setStatusColor(getStatusColor(e.target.value)); // Update status color on change
+                      }}
+                      style={{ backgroundColor: getStatusColor(property.data.status) }} // Set background color based on status
                     >
-                      <option className="font-normal    " value="">Select Status</option>
+                      <option className="font-normal" value="">Select Status</option>
                       {statusOptions.map((option) => (
-                        <option key={option} className="font-normal " value={option}>{option}</option>
+                        <option 
+                          key={option} 
+                          className="font-normal" 
+                          value={option} 
+                          style={{ backgroundColor: getStatusColor(option) }} // Set option background color
+                        >
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </td>
@@ -619,6 +751,18 @@ export default function PropertyTable() {
                     <textarea
                       value={property.data.remark || ''}
                       onChange={(e) => handleFieldChange(property._id, 'remark', e.target.value)}
+                      className="w-auto pl-2 pr-2 min-h-[40px] bg-transparent border-none outline-none text-start font-normal resize-none"
+                      rows="2"
+                      onInput={(e) => {
+                        e.target.style.height = "40px"; // Reset height
+                        e.target.style.height = `${e.target.scrollHeight}px`; // Expand based on content
+                      }}
+                    />
+                  </td>
+                  <td className={`border p-0 ${isFieldMissing(property.data.extralist) ? '' : ''}`}>
+                    <textarea
+                      value={property.data.extralist || ''}
+                      onChange={(e) => handleFieldChange(property._id, 'extralist', e.target.value)}
                       className="w-auto pl-2 pr-2 min-h-[40px] bg-transparent border-none outline-none text-start font-normal resize-none"
                       rows="2"
                       onInput={(e) => {
